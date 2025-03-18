@@ -1,5 +1,6 @@
 import express, {Request, Response, NextFunction} from 'express'
 import { ZodError } from 'zod'
+import { fromError } from 'zod-validation-error'
 import bodyParser from 'body-parser'
 import { config } from './config'
 import { getTaxPosition, patchSale, postTransaction } from './controller'
@@ -14,9 +15,11 @@ const start = () => {
     app.patch('/sale', patchSale)
     
     app.use((err: Error | BaseError | ZodError, req: Request, res: Response, next: NextFunction) => {
-        console.error(err)
+        console.error('Error occurred -', err)
         if (err instanceof ZodError) {
-            res.status(400).json({message: err.flatten()})
+            const formattedError = fromError(err);
+
+            res.status(400).json({message: formattedError})
         }
         else if (err instanceof BaseError) {
             res.status(err.status).json({message: err.message})

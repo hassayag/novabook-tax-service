@@ -122,22 +122,31 @@ export async function patchSale(req: Request, res: Response, next: NextFunction)
     try {
         const {body} = patchSaleSchema.parse(req)
 
-        const invoice = await db.select().from(Invoices).where(eq(Invoices.id, body.invoiceId))
-        if (!invoice[0]) {
-            await db.insert(Invoices).values({
+        let invoice = await db.query.invoices.findFirst({
+            where: eq(Invoices.id, body.invoiceId)
+        })
+
+        if (!invoice) {
+            invoice = (await db.insert(Invoices).values({
                 id: body.invoiceId,
                 date: new Date(body.date),
-            })
+            }).returning())[0]
         }
 
         // create item if no record found at that particular date
-        const item = await db.select().from(Items).where(
-            and(
+        const item = await db.query.items.findFirst({
+            where: and(
                 eq(Items.id, body.itemId), 
                 eq(Items.date, new Date(body.date))
             )
-        )
-        if (!item[0]) {
+        })
+
+        // invoiceId cannot not be modified
+        if (item && item.invoiceId !== invoice?.id) {
+            throw new BadRequestError(`Item already belongs to invoice with ID ${item.invoiceId}`)
+        }
+
+        if (!item) {
             await db.insert(Items).values({
                 id: body.itemId,
                 invoiceId: body.invoiceId,
