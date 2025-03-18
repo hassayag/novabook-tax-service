@@ -1,4 +1,4 @@
-import express, {Request, Response, NextFunction} from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
 import { fromError } from 'zod-validation-error'
 import bodyParser from 'body-parser'
@@ -13,21 +13,21 @@ const start = () => {
     app.post('/transactions', postTransaction)
     app.get('/tax-position', getTaxPosition)
     app.patch('/sale', patchSale)
-    
-    app.use((err: Error | BaseError | ZodError, req: Request, res: Response, next: NextFunction) => {
-        console.error('Error occurred -', err)
-        if (err instanceof ZodError) {
-            const formattedError = fromError(err);
 
-            res.status(400).json({message: formattedError})
+    app.use(
+        (err: Error | BaseError | ZodError, req: Request, res: Response, next: NextFunction) => {
+            console.error('Error occurred -', err)
+            if (err instanceof ZodError) {
+                const formattedError = fromError(err)
+
+                res.status(400).json({ message: formattedError })
+            } else if (err instanceof BaseError) {
+                res.status(err.status).json({ message: err.message })
+            } else {
+                res.status(500).json({ message: 'Something went wrong!' })
+            }
         }
-        else if (err instanceof BaseError) {
-            res.status(err.status).json({message: err.message})
-        }
-        else {
-            res.status(500).json({message: 'Something went wrong!'})
-        }
-    })
+    )
 
     app.listen(config.port, () => {
         console.log(`Listening on port ${config.port}`)

@@ -1,8 +1,7 @@
-import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, integer, numeric, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, numeric, primaryKey } from 'drizzle-orm/pg-core'
 
 export type Invoice = {
-    id: string,
+    id: string
     date: Date
 }
 
@@ -12,28 +11,33 @@ export const Invoices = pgTable('invoices', {
 })
 
 export type Item = {
-    id: string,
-    invoiceId: string,
+    id: string
+    invoiceId: string
     /** in pennies */
-    cost: number,
+    cost: number
     /** decimal between 0 and 1 */
-    taxRate: number,
+    taxRate: number
     date: Date
 }
 
-export const Items = pgTable('items', {
-    id: text().notNull(),
-    date: timestamp().notNull(),
-    invoiceId: text().references(() => Invoices.id, { onDelete: 'cascade' }),
-    cost: integer().notNull(),
-    taxRate: numeric().notNull(),
-},  (table) => [primaryKey({ columns: [table.id, table.date] })]
-);
+export const Items = pgTable(
+    'items',
+    {
+        id: text().notNull(),
+        date: timestamp().notNull(),
+        invoiceId: text().references(() => Invoices.id, {
+            onDelete: 'cascade',
+        }),
+        cost: integer().notNull(),
+        taxRate: numeric().notNull(),
+    },
+    (table) => [primaryKey({ columns: [table.id, table.date] })]
+)
 
 export type Payment = {
-    id: string,
+    id: string
     /** in pennies */
-    amount: number,
+    amount: number
     date: Date
 }
 

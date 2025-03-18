@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from 'zod'
 
 const configSchema = z.object({
     port: z.number(),
@@ -8,7 +8,7 @@ const configSchema = z.object({
         name: z.string(),
         user: z.string(),
         password: z.string(),
-    })
+    }),
 })
 
 export const config = configSchema.parse({
@@ -19,5 +19,5 @@ export const config = configSchema.parse({
         name: process.env.DB_NAME,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-    }
+    },
 })

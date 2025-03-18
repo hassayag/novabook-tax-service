@@ -1,14 +1,14 @@
 services:
-  postgres:
-    image: postgres:17
-    volumes:
-      - postgres-data-volume:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=dev
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_USER=user
+    postgres:
+        image: postgres:17
+        volumes:
+            - postgres-data-volume:/var/lib/postgresql/data
+        ports:
+            - '5432:5432'
+        environment:
+            - POSTGRES_DB=dev
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_USER=user
 
 volumes:
-  postgres-data-volume:
+    postgres-data-volume:
