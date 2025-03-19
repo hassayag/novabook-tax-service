@@ -3,7 +3,6 @@ import { config } from './src/config'
 
 const { host, name, port, user, password } = config.db
 
-/** Used for running drizzle-kit commands locally */
 export default defineConfig({
     dialect: 'postgresql',
     schema: './src/db/schemas.ts',
