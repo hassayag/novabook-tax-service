@@ -1,11 +1,11 @@
-import { NextFunction, Response, Request } from 'express'
-import { postTransaction } from './controller'
-import { TransactionService } from './services/transaction-service'
-import { InvoiceService } from './services/invoice-service'
-import { BadRequestError, ConflictError } from './errors'
+import { Request } from 'express'
+import { postTransaction } from './transaction-controller'
+import { TransactionService } from '../services/transaction-service'
+import { InvoiceService } from '../services/invoice-service'
+import { BadRequestError, ConflictError } from '../lib/errors'
 import { ZodError } from 'zod'
 
-jest.mock('./db')
+jest.mock('../db')
 
 describe('Controller test suite', () => {
     afterEach(() => {

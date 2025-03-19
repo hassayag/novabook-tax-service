@@ -3,8 +3,10 @@ import { ZodError } from 'zod'
 import { fromError } from 'zod-validation-error'
 import bodyParser from 'body-parser'
 import { config } from './config'
-import { getTaxPosition, patchSale, postTransaction } from './controller'
-import { BaseError } from './errors'
+import { BaseError } from './lib/errors'
+import { postTransaction } from './controllers/transaction-controller'
+import { patchSale } from './controllers/sale-controller'
+import { getTaxPosition } from './controllers/tax-controller'
 
 const start = () => {
     const app = express()
@@ -19,8 +21,23 @@ const start = () => {
         }
     })
 
-    app.get('/tax-position', getTaxPosition)
-    app.patch('/sale', patchSale)
+    app.get('/tax-position', async (req, res, next) => {
+        try {
+            const taxPosition = await getTaxPosition(req)
+            res.status(200).send(taxPosition)
+        } catch (err) {
+            next(err)
+        }
+    })
+
+    app.patch('/sale', async (req, res, next) => {
+        try {
+            await patchSale(req)
+            res.status(202).send()
+        } catch (err) {
+            next(err)
+        }
+    })
 
     app.use(
         (err: Error | BaseError | ZodError, req: Request, res: Response, next: NextFunction) => {
