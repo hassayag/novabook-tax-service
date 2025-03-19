@@ -4,7 +4,7 @@
 
 1. `nvm use` (or node 20+)
 2. `npm i`
-3. Start docker daemon and run `docker bcompose up -d` to setup database
+3. Start docker daemon and run `docker compose up -d` to setup database
 4. `npm start`
 
 ## Testing
