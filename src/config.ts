@@ -12,10 +12,10 @@ const configSchema = z.object({
 })
 
 export const config = configSchema.parse({
-    port: 5000,
+    port: Number(process.env.PORT) ?? 5000,
     db: {
         host: process.env.DB_HOST,
-        port: 5432,
+        port: Number(process.env.DB_PORT) ?? 5432,
         name: process.env.DB_NAME,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,

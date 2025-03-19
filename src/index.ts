@@ -10,7 +10,15 @@ const start = () => {
     const app = express()
     app.use(bodyParser.json())
 
-    app.post('/transactions', postTransaction)
+    app.post('/transactions', async (req, res, next) => {
+        try {
+            await postTransaction(req)
+            res.status(202).send()
+        } catch (err) {
+            next(err)
+        }
+    })
+
     app.get('/tax-position', getTaxPosition)
     app.patch('/sale', patchSale)
 

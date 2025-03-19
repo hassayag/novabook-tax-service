@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from 'express'
 import { and, eq, lte, desc } from 'drizzle-orm'
-import { v4 as uuidv4 } from 'uuid'
 import z from 'zod'
 import { db } from './db'
-import { Invoices, Item, Items, Payments } from './db/schemas'
+import { Invoices, Items, Payments } from './db/schemas'
 import { BadRequestError, ConflictError, NotFoundError } from './errors'
+import { TransactionService } from './services/transaction-service'
+import { InvoiceService } from './services/invoice-service'
 
 const postSalesTransactionSchema = z.object({
     body: z.object({
@@ -29,43 +30,29 @@ const postPaymentTransactionSchema = z.object({
     }),
 })
 
-export async function postTransaction(req: Request, res: Response, next: NextFunction) {
-    try {
-        if (req.body.eventType === 'SALES') {
-            const { body } = postSalesTransactionSchema.parse(req)
-            const invoice = await db.select().from(Invoices).where(eq(Invoices.id, body.invoiceId))
-            if (invoice[0]) {
-                throw new ConflictError(`Invoice with id ${body.invoiceId} already exists`)
-            }
-            await db.transaction(async (transaction) => {
-                await transaction.insert(Invoices).values({
-                    id: body.invoiceId,
-                    date: new Date(body.date),
-                })
+export async function postTransaction(req: Request) {
+    const transactionService = new TransactionService()
+    const invoiceService = new InvoiceService()
 
-                const items = body.items.map((item) => ({
-                    id: item.itemId,
-                    invoiceId: body.invoiceId,
-                    cost: item.cost,
-                    taxRate: item.taxRate.toString(),
-                    date: new Date(body.date),
-                }))
+    if (req.body.eventType === 'SALES') {
+        const { body } = postSalesTransactionSchema.parse(req)
 
-                await transaction.insert(Items).values(items)
-            })
-        } else if (req.body.eventType === 'TAX_PAYMENT') {
-            const { body } = postPaymentTransactionSchema.parse(req)
-            await db.insert(Payments).values({
-                id: uuidv4(),
-                amount: body.amount,
-                date: new Date(body.date),
-            })
-        } else {
-            throw new BadRequestError(`Unknown event type ${req.body.eventType}`)
+        const invoice = await invoiceService.getInvoice(body.invoiceId)
+        if (invoice) {
+            throw new ConflictError(`Invoice with id ${body.invoiceId} already exists`)
         }
-        res.status(202).send()
-    } catch (err) {
-        next(err)
+
+        await transactionService.createSale({
+            invoiceId: body.invoiceId,
+            date: new Date(body.date),
+            items: body.items,
+        })
+    } else if (req.body.eventType === 'TAX_PAYMENT') {
+        const { body } = postPaymentTransactionSchema.parse(req)
+
+        await transactionService.createPayment({ amount: body.amount, date: new Date(body.date) })
+    } else {
+        throw new BadRequestError(`Unknown event type ${req.body.eventType}`)
     }
 }
 
@@ -87,7 +74,6 @@ export async function getTaxPosition(req: Request, res: Response, next: NextFunc
             .from(Items)
             .where(lte(Items.date, new Date(endDate)))
             .orderBy(desc(Items.date))
-        console.log(items)
 
         // track used item ids to prevent duplication across different dates
         const usedItemIds = new Set()
